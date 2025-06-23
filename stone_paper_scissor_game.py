@@ -1,5 +1,5 @@
 
-choice = ("r","p","s")
+choice = {"r","p","s"}
 print("\n****\tRock Paper Scissor Game\t****\n")
 
 comp_score = 0
