@@ -1,0 +1,78 @@
+question 1
+    SELECT sales.customer_id, SUM(menu.price) AS total_amount
+    FROM sales
+    JOIN menu ON sales.product_id = menu.product_id
+    GROUP BY sales.customer_id;
+quuestion 2
+    SELECT customer_id, COUNT(DISTINCT order_date) AS visit_days
+    FROM sales
+    GROUP BY customer_id;
+question 3
+    SELECT sales.customer_id, menu.product_name
+    FROM sales
+    JOIN menu ON sales.product_id = menu.product_id
+    WHERE sales.order_date = (
+        SELECT MIN(order_date)
+        FROM sales s2
+        WHERE s2.customer_id = sales.customer_id
+    )
+    GROUP BY sales.customer_id, menu.product_name;
+questioon 4
+    SELECT menu.product_name, COUNT(sales.product_id) AS purchase_count
+    FROM sales
+    JOIN menu ON sales.product_id = menu.product_id
+    GROUP BY menu.product_name
+    ORDER BY purchase_count DESC
+    LIMIT 1;
+question 5
+    SELECT s.customer_id, menu.product_name, COUNT(s.product_id) AS purchase_count
+    FROM sales s
+    JOIN menu ON s.product_id = menu.product_id
+    GROUP BY s.customer_id, menu.product_name
+    HAVING purchase_count = (
+        SELECT MAX(purchase_count)
+        FROM (
+            SELECT COUNT(sales.product_id) AS purchase_count
+            FROM sales
+            WHERE sales.customer_id = s.customer_id
+            GROUP BY sales.product_id
+        ) AS subquery
+    );
+question 6
+    SELECT sales.customer_id, menu.product_name
+    FROM sales
+    JOIN members ON sales.customer_id = members.customer_id
+    JOIN menu ON sales.product_id = menu.product_id
+    WHERE sales.order_date = (
+        SELECT MIN(order_date)
+        FROM sales s2
+        WHERE s2.customer_id = sales.customer_id
+        AND s2.order_date >= members.join_date
+    )
+    GROUP BY sales.customer_id, menu.product_name;
+question 7
+    SELECT sales.customer_id, menu.product_name
+    FROM sales
+    JOIN members ON sales.customer_id = members.customer_id
+    JOIN menu ON sales.product_id = menu.product_id
+    WHERE sales.order_date = (
+        SELECT MAX(order_date)
+        FROM sales s2
+        WHERE s2.customer_id = sales.customer_id
+        AND s2.order_date < members.join_date
+    )
+    GROUP BY sales.customer_id, menu.product_name;
+question 8
+    SELECT members.customer_id, COUNT(sales.product_id) AS total_items, SUM(menu.price) AS total_amount
+    FROM sales
+    JOIN members ON sales.customer_id = members.customer_id
+    JOIN menu ON sales.product_id = menu.product_id
+    WHERE sales.order_date < members.join_date
+    GROUP BY members.customer_id;
+question 9
+    SELECT members.customer_id,
+    SUM(CASE WHEN menu.product_name = 'sushi' THEN menu.price * 20 ELSE menu.price * 10 END) AS total_points
+    FROM sales
+    JOIN members ON sales.customer_id = members.customer_id
+    JOIN menu ON sales.product_id = menu.product_id
+    GROUP BY members.customer_id;
