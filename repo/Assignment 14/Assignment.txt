@@ -1,0 +1,20 @@
+df = spark.sql("select * from default.meta").collect()
+tables = spark.sql("show tables").collect()
+
+def force_create_table(start_ind, end_ind):
+    prev = None
+    for i in df[:][start_ind:end_ind]:
+        # Delete Existing Tables
+        if i in tables:
+            spark.sql(f'drop table {i}')
+
+        if prev != i[0]:
+            spark.sql(f'create table {i[0]} ( {i[1]} {i[2]} ) ')
+            prev = i[0]
+        else:
+            spark.sql(f'alter table {i[0]} add column ( {i[1]} {i[2]} ) ')
+
+# Create Raw Tables
+force_create_table(0,3)
+force_create_table(3,6)
+force_create_table(6,9)
