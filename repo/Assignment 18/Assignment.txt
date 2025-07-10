@@ -1,0 +1,39 @@
+
+
+def force_create_table(start_ind: int, meta_table_name: str, database = "default"):
+    from pyspark.sql.functions import col
+    # Filter Tables with Passed argument in Database and selecting corresponding Tablenames only
+    tables = spark.sql("show tables").filter(col("database") == database).select("tableName").collect()
+
+    df = spark.sql(f" select * from {meta_table_name} ")
+
+    # Removing Null Rows and Other Columns
+    columns = df.columns[start_ind : start_ind + 3]
+    df = df.select(columns).na.drop().collect()
+    
+    prev = None
+    
+    for i in df:
+        # Creating New Table
+        if prev != i[0]:
+            # Checking if Table Exists then Drop
+            for j in tables:
+                if j[0] == i[0]:
+                    spark.sql(f'drop table {database}.{i[0]}')
+                    break
+
+            spark.sql(f'create table {i[0]} ( {i[1]} {i[2]} ) ')
+            prev = i[0]
+        # Add Columns to Already Created Table
+        else:
+            spark.sql(f'alter table {i[0]} add column ( {i[1]} {i[2]} ) ')
+
+# Create Raw Tables
+force_create_table(0, "meta")
+
+# Create Curated Tables
+force_create_table(3, "meta")
+
+#Created Presentation Tables
+force_create_table(6, "meta")
+    
