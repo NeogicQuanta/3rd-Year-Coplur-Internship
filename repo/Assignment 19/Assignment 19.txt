@@ -1,0 +1,38 @@
+def curate_table(meta_table_name: str, curated_schema: str = "curated", database: str = "default"):
+
+    df = spark.sql(f'Select * from {database}.{meta_table_name}').collect()
+
+    prev = None
+    condition = ""
+    first = True
+    prev_cur_table_name = None
+
+    # Creating a Schema
+    spark.sql(f'create schema if not exists {curated_schema}')
+
+    for i in df:
+        # Creating New Table and Adding Logic to previous table
+        if prev != i[0]:
+            spark.sql(f'create table {curated_schema}.{i[4]} ( {i[5]} {i[6]} ) ')
+            # Skipping the Copy to the Curated Table if Loop is Iterated for First Time
+            if first == False:
+                spark.sql(f"insert into {curated_schema}.{prev_cur_table_name} select * from {prev} where {condition[:-5]}")
+                condition = None # Resetting The Condition Variable
+            
+            if i[3] != None:
+                condition += i[3] + " and "
+            
+            prev = i[0]
+            prev_cur_table_name = i[4]
+            first = False
+
+        # Add Columns to Already Created Table
+        else:
+            if i[3] != None:
+                condition += i[3] + " and "
+            spark.sql(f'alter table {curated_schema}.{i[4]} add column ( {i[5]} {i[6]} ) ')
+    
+    # Transferring the Last Update to the Curated Table
+    spark.sql(f"insert into {curated_schema}.{prev_cur_table_name} select * from {prev} where {condition[:-5]}")
+
+curate_table("meta")
