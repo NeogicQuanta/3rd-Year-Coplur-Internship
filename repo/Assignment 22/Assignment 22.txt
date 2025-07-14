@@ -1,0 +1,12 @@
+df = spark.read.csv("/Volumes/workspace/internship/skit/sales.csv", header=True, inferSchema=True)
+
+df_select = df_filter.select("ORDERNUMBER", "QUANTITYORDERED", "PRICEEACH", "ORDERLINENUMBER", "SALES", "agg_sales_data").where("SALES > 10000")
+
+df_select.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.delta_able")
+     
+
+df_history = spark.sql("DESCRIBE HISTORY workspace.internship.delta_able")
+
+df_delta = spark.read.format("delta").table("workspace.internship.delta_able")
+
+df_partition = df_filter.write.partitionBy("SALES").format("delta").mode("overwrite").saveAsTable("workspace.internship.delta_partition")
